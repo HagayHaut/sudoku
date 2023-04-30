@@ -26,7 +26,7 @@ export class SudokuGenerator {
         this.fillDiagonalBoxes();
         this.trySolve(0, this.sqrt);
         this.solved = this.copyData();
-        this.removeKDigits();
+        this.removeRandomK();
         this.starting = this.copyData();
     }
 
@@ -73,10 +73,6 @@ export class SudokuGenerator {
         }
 
         return values;
-    }
-
-    randomGenerator(): number {
-        return ~~(Math.random() * this.n) + 1;
     }
 
     isValidInBox(rowStart: number, colStart: number, num: number): boolean {
@@ -126,12 +122,12 @@ export class SudokuGenerator {
         return false;
     }
 
-    removeKDigits(): void {
+    removeRandomK(): void {
         let k = this.k;
 
         while (k) {
-            const i = this.randomGenerator() - 1;
-            const j = this.randomGenerator() - 1;
+            const i = ~~(Math.random() * this.n);
+            const j = ~~(Math.random() * this.n);
             if (this.data[i][j] !== 0) {
                 k--;
                 this.data[i][j] = 0;
