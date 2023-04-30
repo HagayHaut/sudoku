@@ -1,125 +1,145 @@
 import { Data } from "../types/models";
-import jsonData from '../assets/data.json';
-import { SolvedAndRawData } from "../types/props";
+import { SolvedAndStartingData } from "../types/props";
 
-export class SudokuService {
-    public static generateEmptyBoard(): Data {
-        return Array(9).fill([]).map(_ => Array(9).fill(0));
+export class SudokuGenerator {
+    private data: Data;
+    private n: number;
+    private k: number;
+    private sqrt: number;
+    private solved: Data = [];
+    private puzzle: Data = [];
+
+    constructor(n: number, k: number) {
+        this.n = n;
+        this.k = k;
+        this.sqrt = Math.sqrt(n);
+        this.data = Array(n)
+            .fill([])
+            .map((_) => {
+                return Array(n)
+                    .fill(0)
+                    .map((_) => 0);
+            });
     }
 
-    public static getSolvableGameWithSolution(): SolvedAndRawData {
-        const NUMBER_OF_OPTIONS = 27;
-        const randomIndex = this.generateRandomZeroTo(NUMBER_OF_OPTIONS);
+    public generate(): void {
+        this.fillDiagonal();
+        this.fillRemaining(0, this.sqrt);
+        this.solved = this.copyData();
+        this.removeKDigits();
+        this.puzzle = this.copyData();
+    }
+
+    public getSolvedAndStartingData(): SolvedAndStartingData {
+        console.log(this.solved)
         return {
-          solved: jsonData.SolvedSudoku[randomIndex],
-          raw: jsonData.RawSudoku[randomIndex],  
-        };
+            solved: this.solved,
+            starting: this.puzzle
+        }
     }
 
-    public static generateSolvableGame(): Data {
-        const fullySolvedBoard = this.generateFullySolvedBoard();
-        return this.removeKDigits(20, fullySolvedBoard);
+    private copyData(): Data {
+        const copy = [];
+        for (let i = 0; i < this.n; i++) {
+            copy.push([...this.data[i]]);
+        }
+        return copy;
     }
 
-    private static generateFullySolvedBoard(): Data {
-        let data = this.generateEmptyBoard();
-        data = this.fillDiagonalBoxes(data);
-        return this.fillRemaining(data);
+    fillDiagonal(): void {
+        for (let i = 0; i < this.n; i += this.sqrt) {
+            this.fillBox(i, i);
+        }
     }
 
-    private static fillRemaining(data: Data): Data {
+    fillBox(startRow: number, startCol: number): void {
+        const shuffledValues = this.getShuffledValues();
+        let curIndex = 0;
+        for (let i = 0; i < this.sqrt; i++) {
+            for (let j = 0; j < this.sqrt; j++) {
+                this.data[startRow + i][startCol + j] = shuffledValues[curIndex++];
+            }
+        }
+    }
 
-        const solve = (r: number, c: number): boolean => {
-            if (r === 8 && c === 9) return true; // fully solved (base case)
-            if (c === 9) r++, c = 0; // reset to next row
-            if (data[r][c]) return solve(r, c + 1); // skip already filled cells
+    getShuffledValues(): number[] {
+        const values = Array(this.n).fill(0).map((_, i) => i + 1);
+        let curIndex = this.n;
 
-            // try all possible values for current cell 
-            for (let num = 1; num <= 9; num++) {
-                if (this.isValid(r, c, num, data)) {
-                    data[r][c] = num;
-                    if (solve(r, c + 1)) return true;
-                    data[r][c] = 0; // backtrack
+        while (curIndex) {
+            const randomIndex = ~~(Math.random() * curIndex);
+            curIndex--;
+            [values[curIndex], values[randomIndex]] = [values[randomIndex], values[curIndex]];
+        }
+
+        return values;
+    }
+
+    randomGenerator(): number {
+        return ~~(Math.random() * this.n) + 1;
+    }
+
+    isValidInBox(rowStart: number, colStart: number, num: number): boolean {
+        for (let i = 0; i < this.sqrt; i++) {
+            for (let j = 0; j < this.sqrt; j++) {
+                if (this.data[rowStart + 1][colStart + j] === num) {
+                    return false;
                 }
             }
-
-            return false; // no valid solution
-        }
-
-        solve(0, 3);
-
-        return data;
-    }
-
-    private static removeKDigits(k: number, data: Data): Data {
-        while (k) {
-            const r = this.generateRandomZeroTo(9);
-            const c = this.generateRandomZeroTo(9);
-            if (data[r][c]) {
-                data[r][c] = 0;
-                k--;
-            }
-        }
-        return data;
-    }
-
-    private static fillDiagonalBoxes(data: Data): Data {
-        for (let i = 0; i < 9; i += 3) {
-            data = this.fillBox(i, i, data);
-        }
-        return data;
-    }
-
-    private static fillBox(row: number, col: number, data: Data): Data {
-        let num = 0;
-
-        for (let r = 0; r < 3; r++) {
-            for (let c = 0; c < 3; c++) {
-                // eslint-disable-next-line no-constant-condition
-                while (true) {
-                    num = (this.generateRandomZeroTo(9) + 1);
-                    if (this.isUnusedInBox(row, col, data, num)) {
-                        break;
-                    }
-                }
-                data[row + r][col + c] = num;
-            }
-        }
-        return data;
-    }
-
-    private static isUnusedInBox(row: number, col: number, data: Data, num: number): boolean {
-        for (let r = 0; r < 3; r++) {
-            for (let c = 0; c < 3; c++) {
-                if (data[row + r][col + c] === num) return false;
-            }
         }
         return true;
     }
 
-    private static isUnusedInRow(r: number, num: number, data: Data): boolean {
-        for (let c = 0; c < 9; c++) {
-            if (data[r][c] === num) return false;
+    isValidInRow(i: number, num: number): boolean {
+        return !this.data[i].some(n => n === num);
+    }
+
+    isValidInCol(j: number, num: number): boolean {
+        for (let i = 0; i < this.n; i++) {
+            if (this.data[i][j] === num) return false;
         }
         return true;
     }
 
-    private static isUnusedInCol(c: number, num: number, data: Data): boolean {
-        for (let r = 0; r < 9; r++) {
-            if (data[r][c] === num) return false;
-        }
-        return true;
-    }
-
-    private static isValid(r: number, c: number, num: number, data: Data) {
+    isValid(i: number, j: number, num: number): boolean {
         return (
-            this.isUnusedInRow(r, num, data) &&
-            this.isUnusedInCol(c, num, data) &&
-            this.isUnusedInBox(r, c, data, num)
-        );
+            this.isValidInBox(i - i % this.sqrt, j - j % this.sqrt, num)
+            && this.isValidInRow(i, num)
+            && this.isValidInCol(j, num)
+        )
     }
-    
-    private static generateRandomZeroTo(ceiling: number) {
-        return ~~(Math.random() * ceiling);
+
+    fillRemaining(i: number, j: number): boolean {
+        if (i === this.n - 1 && j === this.n) return true;
+        if (j === this.n) {
+            i++;
+            j = 0;
+        }
+        if (this.data[i][j] !== 0) return this.fillRemaining(i, j + 1);
+        for (let num = 1; num <= this.n; num++) {
+            if (this.isValid(i, j, num)) {
+                this.data[i][j] = num;
+                if (this.fillRemaining(i, j + 1)) return true;
+                this.data[i][j] = 0;
+            }
+        }
+        return false;
+    }
+
+    removeKDigits(): void {
+        let k = this.k;
+
+        while (k) {
+            const i = this.randomGenerator() - 1;
+            const j = this.randomGenerator() - 1;
+            if (this.data[i][j] !== 0) {
+                k--;
+                this.data[i][j] = 0;
+            }
+        }
+    }
+
+    printSudoku() {
+        this.data.forEach(row =>console.log(`${row.join(' ')}\n`));
     }
 }

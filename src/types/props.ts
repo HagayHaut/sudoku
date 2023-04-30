@@ -9,7 +9,7 @@ export interface CellProps {
     coordinates: Coordinates;
 }
 
-export interface SolvedAndRawData {
+export interface SolvedAndStartingData {
     solved: Data;
-    raw: Data;
+    starting: Data;
 }
