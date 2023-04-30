@@ -37,7 +37,7 @@ function App() {
     <>
       <h1 className='text-center'>Sudoku Sensei</h1>
       <div className=''>
-        <Board data={currentBoard}/>
+        <Board data={solvedAndStartingData.solved}/>
         <button className='border border-black' onClick={(_) => generateNewGame()}>Generate new game</button>
       </div>
     </>
