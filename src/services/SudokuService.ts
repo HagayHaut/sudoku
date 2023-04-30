@@ -23,7 +23,7 @@ export class SudokuGenerator {
     }
 
     public generate(): void {
-        this.fillDiagonal();
+        this.fillDiagonalBoxes();
         this.fillRemaining(0, this.sqrt);
         this.solved = this.copyData();
         this.removeKDigits();
@@ -46,7 +46,7 @@ export class SudokuGenerator {
         return copy;
     }
 
-    fillDiagonal(): void {
+    fillDiagonalBoxes(): void {
         for (let i = 0; i < this.n; i += this.sqrt) {
             this.fillBox(i, i);
         }
