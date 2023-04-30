@@ -7,7 +7,7 @@ export class SudokuGenerator {
     private k: number;
     private sqrt: number;
     private solved: Data = [];
-    private puzzle: Data = [];
+    private starting: Data = [];
 
     constructor(n: number, k: number) {
         this.n = n;
@@ -24,17 +24,17 @@ export class SudokuGenerator {
 
     public generate(): void {
         this.fillDiagonalBoxes();
-        this.fillRemaining(0, this.sqrt);
+        this.trySolve(0, this.sqrt);
         this.solved = this.copyData();
         this.removeKDigits();
-        this.puzzle = this.copyData();
+        this.starting = this.copyData();
     }
 
     public getSolvedAndStartingData(): SolvedAndStartingData {
         console.log(this.solved)
         return {
             solved: this.solved,
-            starting: this.puzzle
+            starting: this.starting
         }
     }
 
@@ -109,17 +109,17 @@ export class SudokuGenerator {
         )
     }
 
-    fillRemaining(i: number, j: number): boolean {
+    trySolve(i: number, j: number): boolean {
         if (i === this.n - 1 && j === this.n) return true;
         if (j === this.n) {
             i++;
             j = 0;
         }
-        if (this.data[i][j] !== 0) return this.fillRemaining(i, j + 1);
+        if (this.data[i][j] !== 0) return this.trySolve(i, j + 1);
         for (let num = 1; num <= this.n; num++) {
             if (this.isValid(i, j, num)) {
                 this.data[i][j] = num;
-                if (this.fillRemaining(i, j + 1)) return true;
+                if (this.trySolve(i, j + 1)) return true;
                 this.data[i][j] = 0;
             }
         }
