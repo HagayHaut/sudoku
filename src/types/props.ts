@@ -1,10 +1,15 @@
-import { CellValue, Coordinate, Coordinates } from "./models";
+import { Coordinates, Data } from "./models";
 
 export interface BoardProps {
-    data: CellValue[][]
+    data: Data
 }
 
 export interface CellProps {
-    value: CellValue;
+    value: number;
     coordinates: Coordinates;
+}
+
+export interface SolvedAndRawData {
+    solved: Data;
+    raw: Data;
 }

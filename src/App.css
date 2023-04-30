@@ -1,3 +1,13 @@
 .border-default {
-    border: 1px solid gray;
+    border: 1px solid black;
+}
+
+.border-both {
+    
+}
+.border-right {
+
+}
+.border-bottom {
+
 }
